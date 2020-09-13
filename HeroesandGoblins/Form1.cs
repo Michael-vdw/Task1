@@ -102,9 +102,35 @@ namespace HeroesandGoblins
 
             }
 
-            public abstract override ToString()
+            public abstract override string ToString()
             {
 
+            }
+        }
+
+        abstract class Enemy : Character
+        {
+            Random random = new Random();
+            public Enemy(int x, int y, int damage, int hp, int maxHP, char symbol) : base(x,y,symbol)
+            {
+                
+            }
+            public override string ToString()
+            {
+                return "Name at [" + X + "," + Y + "] Damage:" + Damage;
+            }
+        }
+
+        private class Goblin : Enemy
+        {
+            public Goblin(int x, int y) : base(x, y, 1, 10, 10, 'G')
+            {
+
+            }
+
+            public override Movement ReturnMove(Movement move = random)
+            {
+                return
             }
         }
        
