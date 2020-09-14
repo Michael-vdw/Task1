@@ -34,7 +34,7 @@ namespace HeroesandGoblins
 
             class Obstacle : Tile
             {
-                public Obstacle() : base(0,0)
+                public Obstacle(int x, int y) : base(x,y)
                 {
                    
                 }
@@ -42,7 +42,7 @@ namespace HeroesandGoblins
 
             class EmptyTile : Tile
             {
-                public EmptyTile() : base(0, 0)
+                public EmptyTile(int x, int y) : base(x,y)
                 {
 
                 }
@@ -73,39 +73,61 @@ namespace HeroesandGoblins
 
             public virtual void Attack(Character target)
             {
-
+                target.hp -= Damage;
             }
 
             public bool IsDead()
             {
-                return true;
+                if (hp < 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             public virtual bool CheckRange(Character target)
             {
-                
-                return true;
+                if (DistanceTo(target) < 2)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
-            private int DistanceTo(target)
+            private int DistanceTo(Character target)
             {
-                return 0; 
+                return Math.Abs(target.X - this.X) + Math.Abs(target.Y - this.Y);
             }
 
             public void Move(Movement move)
             {
-
+                if (move == Movement.Up)
+                {
+                    y++;
+                }
+                if (move == Movement.Down)
+                {
+                    y--;
+                }
+                if (move == Movement.Left)
+                {
+                    x--;
+                }
+                if (move == Movement.Right)
+                {
+                    x++;
+                }
             }
 
-            public abstract Movement ReturnMove(Movement move = 0)
-            {
+            public abstract Movement ReturnMove(Movement move);
 
-            }
-
-            public abstract override string ToString()
-            {
-
-            }
+            public abstract override string ToString();
         }
 
         abstract class Enemy : Character
