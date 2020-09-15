@@ -12,6 +12,11 @@ namespace HeroesandGoblins
 {
     public partial class Form1 : Form
     {
+        private static readonly char cHero = 'H';
+        private static readonly char cGoblin = 'G';
+        private static readonly char cEmpty = '.';
+        private static readonly char cObstacle = 'X';
+        GameEngine gameengine;
         abstract class Tile 
         {
             private protected int x, y;
@@ -198,7 +203,7 @@ namespace HeroesandGoblins
 
         class Map
         {
-            private Tile[,] map;
+            private Tile[,] tileMap;
             private Hero player;
             private Enemy[] enemies;
             private int minWidth, maxWidth, minHeight, maxHeight, height, width;
@@ -207,7 +212,6 @@ namespace HeroesandGoblins
             public int MinWidth { get => minWidth; set => minWidth = value; }
             public int MaxWidth { get => maxWidth; set => maxWidth = value; }
             public int MinHeight { get => minHeight; set => minHeight = value; }
-            public int MaxHeight { get => maxHeight; set => maxHeight = value; }
 
             public Map(int minwidth, int maxwidth, int minheight, int maxheight, int enemies)
             {
@@ -226,17 +230,17 @@ namespace HeroesandGoblins
             }
             public void UpdateVision()
             {
-                player.Vision[1] = map[player.X, player.Y + 1];
-                player.Vision[2] = map[player.X, player.Y - 1];
-                player.Vision[3] = map[player.X - 1, player.Y];
-                player.Vision[4] = map[player.X + 1, player.Y];
+                player.Vision[1] = tileMap[player.X, player.Y + 1];
+                player.Vision[2] = tileMap[player.X, player.Y - 1];
+                player.Vision[3] = tileMap[player.X - 1, player.Y];
+                player.Vision[4] = tileMap[player.X + 1, player.Y];
 
                 for (int i = 1; i > enemies.Length; i++)
                 {
-                    enemies[i].Vision[1] = map[enemies[i].X, enemies[i].Y + 1];
-                    enemies[i].Vision[2] = map[enemies[i].X, enemies[i].Y - 1];
-                    enemies[i].Vision[3] = map[enemies[i].X - 1, enemies[i].Y];
-                    enemies[i].Vision[4] = map[enemies[i].X + 1, enemies[i].Y];
+                    enemies[i].Vision[1] = tileMap[enemies[i].X, enemies[i].Y + 1];
+                    enemies[i].Vision[2] = tileMap[enemies[i].X, enemies[i].Y - 1];
+                    enemies[i].Vision[3] = tileMap[enemies[i].X - 1, enemies[i].Y];
+                    enemies[i].Vision[4] = tileMap[enemies[i].X + 1, enemies[i].Y];
                 }
             }
 
@@ -245,7 +249,7 @@ namespace HeroesandGoblins
                 int x = randomnum.Next(1, width);
                 int y = randomnum.Next(1, height);
 
-                while (map[x,y].ThisTile != Tile.TileType.Empty)
+                while (tileMap[x,y].ThisTile != Tile.TileType.Empty)
                 {
                     x = randomnum.Next(1, width);
                     y = randomnum.Next(1, height);
@@ -264,6 +268,7 @@ namespace HeroesandGoblins
         class GameEngine
         {
             private Map engineMap;
+            private Hero player;
             public Map EngineMap { get => engineMap; set => engineMap = value; }
 
             public GameEngine() 
@@ -271,14 +276,84 @@ namespace HeroesandGoblins
                 Map newmap = new Map(5,15,5,15,5);
             }
 
-            //public bool MovePlayer
+            public bool MovePlayer(Character.Movement move)
+            {
+                if (move == Character.Movement.Down)
+                {
+                    if (player.Vision[2].thisTile == Tile.TileType.Empty)
+                    {
+                        player.Move(Character.Movement.Down);
+                        EngineMap.UpdateVision();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                if (move == Character.Movement.Right)
+                {
+                    if (player.Vision[4].thisTile == Tile.TileType.Empty)
+                    {
+                        player.Move(Character.Movement.Right);
+                        EngineMap.UpdateVision();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                if (move == Character.Movement.Left)
+                {
+                    if (player.Vision[3].thisTile == Tile.TileType.Empty)
+                    {
+                        player.Move(Character.Movement.Left);
+                        EngineMap.UpdateVision();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                if (move == Character.Movement.Up)
+                {
+                    if (player.Vision[1].thisTile == Tile.TileType.Empty)
+                    {
+                        player.Move(Character.Movement.Left);
+                        EngineMap.UpdateVision();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return false;
+            }
+            private void btnUp_Click(object sender, EventArgs e)
+            {
+                MovePlayer(Character.Movement.Up);
+            }
+            private void btnleft_Click(object sender, EventArgs e)
+            {
+                MovePlayer(Character.Movement.Left);
+            }
+            private void btnRight_Click(object sender, EventArgs e)
+            {
+                MovePlayer(Character.Movement.Right);
+            }
+            private void btnDown_Click(object sender, EventArgs e)
+            {
+                MovePlayer(Character.Movement.Down);
+            }
         }
-
-        
        
         public Form1()
         {
             InitializeComponent();
-        }
+            gameengine = new GameEngine();
+        }       
     }
 }
