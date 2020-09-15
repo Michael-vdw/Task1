@@ -18,12 +18,15 @@ namespace HeroesandGoblins
             public int X { get => x; set => x = value; }
             public int Y { get => y; set => y = value; }
 
+            public TileType thisTile;
+            public TileType ThisTile { get => thisTile; set => thisTile = value; }
             public enum TileType
             {
                 Hero,
                 Enemy,
                 Gold,
-                Weapon
+                Weapon,
+                Empty
             }
 
             public Tile(int x, int y)
@@ -48,15 +51,17 @@ namespace HeroesandGoblins
                 }
             }
         }
-        
+
         abstract class Character : Tile
         {
             private protected int hp, maxHP, damage;
-            private protected int[] Tile;
+            private protected int symbol;
+            private protected Tile[] Tile; 
 
             public int HP { get => hp; set => hp = value; }
             public int MaxHP { get => maxHP; set => maxHP = value; }
             public int Damage { get => damage; set => damage = value; }
+            public int Symbol { get => symbol; set => symbol = value; }
             public enum Movement
             {
                 NoMove,
@@ -139,7 +144,7 @@ namespace HeroesandGoblins
             }
             public override string ToString()
             {
-                return "Name at [" + X + "," + Y + "] Damage:" + Damage;
+                return nameof(Enemy) + " at [" + X + "," + Y + "] Damage:" + Damage;
             }
         }
 
@@ -150,9 +155,16 @@ namespace HeroesandGoblins
 
             }
 
-            public override Movement ReturnMove(Movement move = random)
+            public override Movement ReturnMove(Movement move)
             {
-                return
+                Random random = new Random();
+                int randomroll = random.Next(1, 5);
+
+                while (Tile[randomroll].thisTile != TileType.Empty)
+                {
+                    randomroll = random.Next(1, 5);
+                }
+                return (Movement)randomroll;
             }
         }
        
