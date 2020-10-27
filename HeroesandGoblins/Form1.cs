@@ -146,11 +146,13 @@ namespace HeroesandGoblins
             Random random = new Random();
             public Enemy(int x, int y, int damage, int hp, int maxHP, char symbol) : base(x,y,symbol)
             {
-                
+                Damage = damage;
+                HP = hp;
+                MaxHP = maxHP;
             }
             public override string ToString()
             {
-                return nameof(Enemy) + " at [" + X + "," + Y + "] Damage:" + Damage;
+                return nameof(Enemy) + " at [" + X + "," + Y + "] Damage:" + damage;
             }
         }
 
@@ -217,6 +219,7 @@ namespace HeroesandGoblins
             public int Height { get => height; set => height = value; }
             public int Width { get => width; set => width = value; }
             public Hero Player { get => player; set => player = value; }
+            public Enemy[] Enemies { get => enemies; set => enemies = value; }
             public Tile[,] TileMap { get => tileMap; set => tileMap = value; }
 
             public Map(int minwidth, int maxwidth, int minheight, int maxheight, int enemynum)
@@ -323,7 +326,7 @@ namespace HeroesandGoblins
                     }
                     else
                     {
-                        MessageBox.Show("Path Blocked","Cannot move here");
+                        //MessageBox.Show("Path Blocked","Cannot move here");
                         return false;
                     }
                 }
@@ -339,7 +342,7 @@ namespace HeroesandGoblins
                     }
                     else
                     {
-                        MessageBox.Show("Path Blocked", "Cannot move here");
+                        //MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
@@ -355,7 +358,7 @@ namespace HeroesandGoblins
                     }
                     else
                     {
-                        MessageBox.Show("Path Blocked", "Cannot move here");
+                        //MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
@@ -371,7 +374,7 @@ namespace HeroesandGoblins
                     }
                     else
                     {
-                        MessageBox.Show("Path Blocked", "Cannot move here");
+                        //MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
@@ -412,7 +415,12 @@ namespace HeroesandGoblins
         public Form1()
         {
             InitializeComponent();
+            rtbAttack.Text = "";
             mapDraw();
+            for (int i = 0; i < gameengine.EngineMap.Enemies.Length; i++)
+            {
+                cbxEnemies.Items.Add(gameengine.EngineMap.Enemies[i]);
+            }  
         }
 
         private void btnUp_Click_1(object sender, EventArgs e)
@@ -436,6 +444,28 @@ namespace HeroesandGoblins
         private void btnleft_Click_1(object sender, EventArgs e)
         {
             gameengine.MovePlayer(Character.Movement.Left);
+            mapDraw();
+        }
+
+        private void btnAttack_Click(object sender, EventArgs e)
+        {
+            if (gameengine.Player.CheckRange((Character)cbxEnemies.SelectedItem) == true)
+            {
+                gameengine.Player.Attack((Character)cbxEnemies.SelectedItem);
+                rtbAttack.Text += "Attacked successfully\n";
+            }
+            else
+            {
+                rtbAttack.Text += "Out of range\n";
+            }
+            for (int i = 0; i < gameengine.EngineMap.Enemies.Length; i++)
+            {
+                if (gameengine.EngineMap.Enemies[i].HP < 1)
+                {
+                    gameengine.EngineMap.TileMap[gameengine.EngineMap.Enemies[i].X, gameengine.EngineMap.Enemies[i].Y] = new EmptyTile(gameengine.EngineMap.Enemies[i].X, gameengine.EngineMap.Enemies[i].Y);
+                    cbxEnemies.Items.Remove(cbxEnemies.SelectedItem);
+                }
+            }
             mapDraw();
         }
     }
