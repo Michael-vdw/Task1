@@ -16,7 +16,7 @@ namespace HeroesandGoblins
         private static readonly char cGoblin = 'G';
         private static readonly char cEmpty = '.';
         private static readonly char cObstacle = 'X';
-        GameEngine gameengine;
+        GameEngine gameengine = new GameEngine();
         abstract class Tile 
         {
             private protected int x, y;
@@ -31,7 +31,8 @@ namespace HeroesandGoblins
                 Enemy,
                 Gold,
                 Weapon,
-                Empty
+                Empty,
+                Obstacle
             }
 
             public Tile(int x, int y)
@@ -39,21 +40,20 @@ namespace HeroesandGoblins
                 this.x = x;
                 this.y = y;
             }
+        }
 
-            class Obstacle : Tile
+        class EmptyTile : Tile
+        {
+            public EmptyTile(int x, int y) : base(x, y)
             {
-                public Obstacle(int x, int y) : base(x,y)
-                {
-                   
-                }
+                ThisTile = TileType.Empty;
             }
-
-            class EmptyTile : Tile
+        }
+        class Obstacle : Tile
+        {
+            public Obstacle(int x, int y) : base(x, y)
             {
-                public EmptyTile(int x, int y) : base(x,y)
-                {
-
-                }
+                ThisTile = TileType.Obstacle;
             }
         }
 
@@ -61,7 +61,7 @@ namespace HeroesandGoblins
         {
             private protected int hp, maxHP, damage;
             private protected int symbol;
-            private protected Tile[] vision; 
+            private protected Tile[] vision = new Tile[4]; 
 
             public int HP { get => hp; set => hp = value; }
             public int MaxHP { get => maxHP; set => maxHP = value; }
@@ -120,11 +120,11 @@ namespace HeroesandGoblins
             {
                 if (move == Movement.Up)
                 {
-                    y++;
+                    y--;
                 }
                 if (move == Movement.Down)
                 {
-                    y--;
+                    y++;
                 }
                 if (move == Movement.Left)
                 {
@@ -158,7 +158,7 @@ namespace HeroesandGoblins
         {
             public Goblin(int x, int y) : base(x, y, 1, 10, 10, 'G')
             {
-
+                thisTile = TileType.Enemy;
             }
 
             public override Movement ReturnMove(Movement move)
@@ -181,6 +181,7 @@ namespace HeroesandGoblins
                 this.hp = hp;
                 this.maxHP = hp;
                 this.damage = 2;
+                thisTile = TileType.Hero;
             }
 
             public override Movement ReturnMove(Movement move)
@@ -197,7 +198,7 @@ namespace HeroesandGoblins
 
             public override string ToString()
             {
-                return "Player stats: \nHP:" + hp + "/" + maxHP + "\nDamage:" + damage + "[" + x + "," + y + "]"; 
+                return "Player stats: \nHP:" + hp + "/" + maxHP + "\nDamage:" + damage + "\nCoordinates:" + "[" + x + "," + y + "]"; 
             }
         }
 
@@ -206,41 +207,65 @@ namespace HeroesandGoblins
             private Tile[,] tileMap;
             private Hero player;
             private Enemy[] enemies;
-            private int minWidth, maxWidth, minHeight, maxHeight, height, width;
-            Random randomnum;
+            private int minWidth, maxWidth, minHeight, maxHeight, height, width, i;
+            Random randomnum = new Random();
 
             public int MinWidth { get => minWidth; set => minWidth = value; }
             public int MaxWidth { get => maxWidth; set => maxWidth = value; }
             public int MinHeight { get => minHeight; set => minHeight = value; }
+            public int MaxHeight { get => maxHeight; set => maxHeight = value; }
+            public int Height { get => height; set => height = value; }
+            public int Width { get => width; set => width = value; }
+            public Hero Player { get => player; set => player = value; }
+            public Tile[,] TileMap { get => tileMap; set => tileMap = value; }
 
-            public Map(int minwidth, int maxwidth, int minheight, int maxheight, int enemies)
+            public Map(int minwidth, int maxwidth, int minheight, int maxheight, int enemynum)
             {
-                height = randomnum.Next(minheight, maxheight);
-                width = randomnum.Next(minwidth, maxwidth);
+                Height = randomnum.Next(minheight, maxheight);
+                Width = randomnum.Next(minwidth, maxwidth);
 
-                Tile[,] newMap = new Tile[width, height];
-                Enemy[] newEnemy = new Enemy[enemies];
+                tileMap = new Tile[width, height];
+                enemies = new Enemy[enemynum];
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (x == 0 || y == 0 || x == width -1 || y == height -1)
+                        {
+                            tileMap[x, y] = new Obstacle(x, y);
+                        }
+                        else
+                        {
+                            tileMap[x, y] = new EmptyTile(x, y);
+                        }      
+                    }
+                }
 
                 Create(Tile.TileType.Hero);
 
-                for ( int i = 0; i > enemies; i++)
+                i = 0;
+                while(i < enemynum)
                 {
                     Create(Tile.TileType.Enemy);
+                    i++;
                 }
+
+                UpdateVision();
             }
             public void UpdateVision()
             {
+                player.Vision[0] = tileMap[player.X, player.Y - 1];
                 player.Vision[1] = tileMap[player.X, player.Y + 1];
-                player.Vision[2] = tileMap[player.X, player.Y - 1];
-                player.Vision[3] = tileMap[player.X - 1, player.Y];
-                player.Vision[4] = tileMap[player.X + 1, player.Y];
+                player.Vision[2] = tileMap[player.X - 1, player.Y];
+                player.Vision[3] = tileMap[player.X + 1, player.Y];
 
-                for (int i = 1; i > enemies.Length; i++)
+                for (int i = 0; i > enemies.Length; i++)
                 {
+                    enemies[i].Vision[0] = tileMap[enemies[i].X, enemies[i].Y - 1];
                     enemies[i].Vision[1] = tileMap[enemies[i].X, enemies[i].Y + 1];
-                    enemies[i].Vision[2] = tileMap[enemies[i].X, enemies[i].Y - 1];
-                    enemies[i].Vision[3] = tileMap[enemies[i].X - 1, enemies[i].Y];
-                    enemies[i].Vision[4] = tileMap[enemies[i].X + 1, enemies[i].Y];
+                    enemies[i].Vision[2] = tileMap[enemies[i].X - 1, enemies[i].Y];
+                    enemies[i].Vision[3] = tileMap[enemies[i].X + 1, enemies[i].Y];
                 }
             }
 
@@ -256,12 +281,17 @@ namespace HeroesandGoblins
                 }
                 if (type == Tile.TileType.Hero)
                 {
-                    return new Hero(x, y, 40);
+                    player = new Hero(x, y, 40);
+                    tileMap[player.X, player.Y] = player;
+                    return player;
                 }
-                else
+                if (type == Tile.TileType.Enemy)
                 {
-                    return new Goblin(x, y);
+                    enemies[i] = new Goblin(x, y);
+                    tileMap[enemies[i].X, enemies[i].Y] = enemies[i];
+                    return enemies[i];
                 }
+                return new EmptyTile(x, y);
             }
         }
 
@@ -269,91 +299,144 @@ namespace HeroesandGoblins
         {
             private Map engineMap;
             private Hero player;
+            //private static readonly char 
             public Map EngineMap { get => engineMap; set => engineMap = value; }
+            public Hero Player { get => player; set => player = value; }
 
             public GameEngine() 
             {
-                Map newmap = new Map(5,15,5,15,5);
+                engineMap = new Map(10,15,10,15,5);
+                player = engineMap.Player;
             }
 
             public bool MovePlayer(Character.Movement move)
             {
                 if (move == Character.Movement.Down)
                 {
-                    if (player.Vision[2].thisTile == Tile.TileType.Empty)
+                    if (player.Vision[1].thisTile == Tile.TileType.Empty)
                     {
                         player.Move(Character.Movement.Down);
+                        EngineMap.TileMap[player.X, player.Y] = player; 
+                        EngineMap.TileMap[player.X, player.Y - 1] = new EmptyTile(player.X, player.Y - 1);
                         EngineMap.UpdateVision();
                         return true;
                     }
                     else
                     {
+                        MessageBox.Show("Path Blocked","Cannot move here");
                         return false;
                     }
                 }
                 if (move == Character.Movement.Right)
                 {
-                    if (player.Vision[4].thisTile == Tile.TileType.Empty)
+                    if (player.Vision[3].thisTile == Tile.TileType.Empty)
                     {
                         player.Move(Character.Movement.Right);
+                        EngineMap.TileMap[player.X, player.Y] = player;
+                        EngineMap.TileMap[player.X - 1, player.Y] = new EmptyTile(player.X - 1, player.Y);
                         EngineMap.UpdateVision();
                         return true;
                     }
                     else
                     {
+                        MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
                 if (move == Character.Movement.Left)
                 {
-                    if (player.Vision[3].thisTile == Tile.TileType.Empty)
+                    if (player.Vision[2].thisTile == Tile.TileType.Empty)
                     {
                         player.Move(Character.Movement.Left);
+                        EngineMap.TileMap[player.X, player.Y] = player;
+                        EngineMap.TileMap[player.X + 1, player.Y] = new EmptyTile(player.X + 1, player.Y);
                         EngineMap.UpdateVision();
                         return true;
                     }
                     else
                     {
+                        MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
                 if (move == Character.Movement.Up)
                 {
-                    if (player.Vision[1].thisTile == Tile.TileType.Empty)
+                    if (player.Vision[0].thisTile == Tile.TileType.Empty)
                     {
-                        player.Move(Character.Movement.Left);
+                        player.Move(Character.Movement.Up);
+                        EngineMap.TileMap[player.X, player.Y] = player;                      
+                        EngineMap.TileMap[player.X, player.Y + 1] = new EmptyTile(player.X, player.Y + 1);
                         EngineMap.UpdateVision();
                         return true;
                     }
                     else
                     {
+                        MessageBox.Show("Path Blocked", "Cannot move here");
                         return false;
                     }
                 }
                 return false;
             }
-            private void btnUp_Click(object sender, EventArgs e)
-            {
-                MovePlayer(Character.Movement.Up);
-            }
-            private void btnleft_Click(object sender, EventArgs e)
-            {
-                MovePlayer(Character.Movement.Left);
-            }
-            private void btnRight_Click(object sender, EventArgs e)
-            {
-                MovePlayer(Character.Movement.Right);
-            }
-            private void btnDown_Click(object sender, EventArgs e)
-            {
-                MovePlayer(Character.Movement.Down);
-            }
+
+            
         }
-       
+        public void mapDraw()
+        {
+            labelMap.Text = "";
+
+            for (int y = 0; y < gameengine.EngineMap.Height; y++)
+            {
+                for (int x = 0; x < gameengine.EngineMap.Width; x++)
+                {
+                    if (gameengine.EngineMap.TileMap[x, y].ThisTile == Tile.TileType.Empty)
+                    {
+                        labelMap.Text += cEmpty;
+                    }
+                    if (gameengine.EngineMap.TileMap[x, y].ThisTile == Tile.TileType.Enemy)
+                    {
+                        labelMap.Text += cGoblin;
+                    }
+                    if (gameengine.EngineMap.TileMap[x, y].ThisTile == Tile.TileType.Hero)
+                    {
+                        labelMap.Text += cHero;
+                    }
+                    if (gameengine.EngineMap.TileMap[x, y].ThisTile == Tile.TileType.Obstacle)
+                    {
+                        labelMap.Text += cObstacle;
+                    }
+                }
+                labelMap.Text += "\n";
+            }
+            lblStats.Text = gameengine.Player.ToString();
+        }
         public Form1()
         {
             InitializeComponent();
-            gameengine = new GameEngine();
-        }       
+            mapDraw();
+        }
+
+        private void btnUp_Click_1(object sender, EventArgs e)
+        {
+            gameengine.MovePlayer(Character.Movement.Up);
+            mapDraw();
+        }
+
+        private void btnRight_Click_1(object sender, EventArgs e)
+        {
+            gameengine.MovePlayer(Character.Movement.Right);
+            mapDraw();
+        }
+
+        private void btnDown_Click_1(object sender, EventArgs e)
+        {
+            gameengine.MovePlayer(Character.Movement.Down);
+            mapDraw();
+        }
+
+        private void btnleft_Click_1(object sender, EventArgs e)
+        {
+            gameengine.MovePlayer(Character.Movement.Left);
+            mapDraw();
+        }
     }
 }
